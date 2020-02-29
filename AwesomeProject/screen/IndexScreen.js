@@ -5,6 +5,8 @@ import MaterialMessageTextbox2 from "../components/MaterialMessageTextbox2";
 import RNTesseractOcr from 'react-native-tesseract-ocr';
 import ImagePicker from 'react-native-image-picker';
 import RNPickerSelect from 'react-native-picker-select';
+import Spinner from 'react-native-loading-spinner-overlay';
+
 
 class IndexScreen extends Component {
 
@@ -12,8 +14,10 @@ class IndexScreen extends Component {
     super(props)
     this.state = {
       ocrResult: '',
-      value: 'LANG_VIETNAMESE'
+      value: 'LANG_VIETNAMESE',
+      spinner: false
     }
+    this.chooseImage = this.chooseImage.bind(this);
   }
 
   chooseImage = () => {
@@ -27,6 +31,7 @@ class IndexScreen extends Component {
         path: 'images',
       },
     };
+   
     ImagePicker.showImagePicker(options, (response) => {
 
       if (response.didCancel) {
@@ -38,12 +43,8 @@ class IndexScreen extends Component {
         alert(response.customButton);
       } else {
         const source = { uri: response.uri };
-
-        // You can also display the image using data:
-        // const source = { uri: 'data:image/jpeg;base64,' + response.data };
-        // alert(JSON.stringify(response));s
-       // console.log('response', JSON.stringify(response));
-        this.proccessText(response.path);
+        
+       this.setState({ }, this.proccessText(response.path));
       }
     });
   }
@@ -55,6 +56,7 @@ class IndexScreen extends Component {
         path: 'images',
       },
     };
+    
     ImagePicker.launchCamera(options, (response) => {
 
       if (response.didCancel) {
@@ -67,7 +69,8 @@ class IndexScreen extends Component {
       } else {
         const source = { uri: response.uri };
        // console.log('response', JSON.stringify(response));
-        this.proccessText(response.path);
+       
+       this.setState({ }, this.proccessText(response.path));
       }
     });
 
@@ -80,6 +83,7 @@ class IndexScreen extends Component {
         path: 'images',
       },
     };
+
     ImagePicker.launchImageLibrary(options, (response) => {
 
       if (response.didCancel) {
@@ -92,7 +96,7 @@ class IndexScreen extends Component {
       } else {
         const source = { uri: response.uri };
        // console.log('response', JSON.stringify(response));
-        this.proccessText(response.path);
+       this.setState({ }, this.proccessText(response.path));
       }
     }); 
   } 
@@ -104,13 +108,15 @@ class IndexScreen extends Component {
     };
     var lang = this.state.value;
     console.log(lang);
+    this.setState({ spinner: true });
     RNTesseractOcr.recognize(imgPath, lang, tessOptions)
     .then((result) => {
-      result = JSON.stringify(result);
+      this.setState({ spinner: false });
       this.setState({ ocrResult: result });
       console.log("OCR Result: ", result);
     })
     .catch((err) => {
+      this.setState({ spinner: false });
       console.log("OCR Error: ", err);
     })
     .done();
@@ -119,13 +125,18 @@ class IndexScreen extends Component {
   render() {
         return (
             <View style={styles.container}>
+            <Spinner
+                visible={this.state.spinner}
+                textContent={'Loading...'}
+                textStyle={styles.spinnerTextStyle}
+                  />
             <RNPickerSelect
             onValueChange={(value) => this.state.value = value}
             items={[
                 { label: 'ENGLISH', value: 'LANG_ENGLISH' },
                 { label: 'VIETNAMESE', value: 'LANG_VIETNAMESE' }
             ]}
-        />
+            />
             <CupertinoButtonDelete
                 icon1Name="ios-camera"
                 onPress={()=>this.chooseImage()}
@@ -134,6 +145,7 @@ class IndexScreen extends Component {
             <MaterialMessageTextbox2
                 textInput1=""
                 editable={false}
+                multiline={true}
                 text1=""
                 value={this.state.ocrResult}
                 style={styles.materialMessageTextbox2}
@@ -146,6 +158,9 @@ class IndexScreen extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1
+  },
+  spinnerTextStyle: {
+    color: '#FFF'
   },
   cupertinoButtonDelete: {
     width: 111,

@@ -22,6 +22,7 @@ function MaterialMessageTextbox2(props) {
         placeholder={props.textInput1 || "Input"}
         value = {props.value}
         editable = {props.editable}
+        multiline={props.multiline}
         style={[
           styles.inputStyle,
           {
